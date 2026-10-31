@@ -16,7 +16,7 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Gradle
@@ -24,25 +24,19 @@ jobs:
         with:
           gradle-version: '8.10.2'
 
-      - name: Locate Project & Build Debug APK
+      - name: Build Debug APK
         run: |
-          # Automatically find where settings.gradle.kts or build.gradle.kts is located
-          SETTINGS_FILE=$(find . -name "settings.gradle*" | head -n 1)
-
-          if [ -n "$SETTINGS_FILE" ]; then
-            PROJECT_DIR=$(dirname "$SETTINGS_FILE")
-            echo "Found project in: $PROJECT_DIR"
-            cd "$PROJECT_DIR"
-            gradle assembleDebug --stacktrace
-          else
-            echo "=== ROOT FILES NOT FOUND! LISTING ALL REPOSITORY FILES ==="
-            find . -maxdepth 4 -not -path '*/.*'
-            exit 1
+          if [ -d "android" ]; then
+            cd android
+          elif [ -d "DontTouchTheRed" ]; then
+            cd DontTouchTheRed
           fi
+          chmod +x gradlew || true
+          gradle assembleDebug --stacktrace
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: DontTouchTheRed-Game-APK
-          path: "**/app/build/outputs/apk/debug/*.apk"
+          path: "**/outputs/apk/debug/*.apk"
           retention-days: 7
