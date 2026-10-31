@@ -24,12 +24,21 @@ jobs:
         with:
           gradle-version: '8.10.2'
 
-      - name: Build Debug APK
+      - name: Locate Project & Build Debug APK
         run: |
-          if [ -d "DontTouchTheRed" ]; then
-            cd DontTouchTheRed
+          # Automatically find where settings.gradle.kts or build.gradle.kts is located
+          SETTINGS_FILE=$(find . -name "settings.gradle*" | head -n 1)
+
+          if [ -n "$SETTINGS_FILE" ]; then
+            PROJECT_DIR=$(dirname "$SETTINGS_FILE")
+            echo "Found project in: $PROJECT_DIR"
+            cd "$PROJECT_DIR"
+            gradle assembleDebug --stacktrace
+          else
+            echo "=== ROOT FILES NOT FOUND! LISTING ALL REPOSITORY FILES ==="
+            find . -maxdepth 4 -not -path '*/.*'
+            exit 1
           fi
-          gradle assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
