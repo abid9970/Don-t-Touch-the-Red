@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#090a10">
+  <meta name="description" content="DON'T TOUCH THE RED - A hyper-addictive, mobile-first arcade reflex survival game. Touch blue, dodge red, survive the speed!">
+  <title>DON'T TOUCH THE RED | Cyber Neon Reflex Arcade</title>
+
+  <!-- Google Fonts: Orbitron for Cyber Arcade & Inter for UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app-container">
+    <!-- Active Game Canvas -->
+    <div id="game-canvas-container">
+      <canvas id="game-canvas"></canvas>
+    </div>
+
+    <!-- Floating Toast Notification -->
+    <div id="toast-notification" class="hidden"></div>
+
+    <!-- ================= 1. WELCOME SCREEN ================= -->
+    <div id="welcome-screen" class="game-screen">
+      <div class="welcome-header">
+        <div class="game-title-wrap">
+          <h1 class="main-title">
+            DON'T TOUCH<br>
+            THE <span class="highlight-red">RED</span>
+          </h1>
+          <p class="sub-tagline">REFLEX SURVIVAL PROTOCOL</p>
+        </div>
+
+        <!-- Friend Challenge Banner (appears if opened with challenge link) -->
+        <div id="welcome-challenge-banner" class="challenge-alert-banner hidden">
+          <span id="challenge-banner-text">⚔️ A rival challenged you to beat their score!</span>
+        </div>
+
+        <!-- Pilot Profile & Streak -->
+        <div class="pilot-status-bar">
+          <div class="pilot-tag">
+            <span>👾</span>
+            <span id="welcome-gamer-tag">NeonRider</span>
+            <button id="btn-edit-gamertag" class="btn-icon-small" title="Edit GamerTag">✏️</button>
+          </div>
+          <div class="pilot-streak-pill" title="Daily Play Streak">
+            <span>🔥</span>
+            <span id="welcome-streak-count">1</span>
+            <span>Day Streak</span>
+          </div>
+        </div>
+
+        <!-- Quick Visual Rules Pill -->
+        <div class="quick-rules-pill">
+          <span class="rule-blue">🔵 Blue = Safe & Combo</span>
+          <span class="rule-divider">•</span>
+          <span class="rule-red">🔴 Red = Lethal</span>
+        </div>
+      </div>
+
+      <!-- Main Action Buttons -->
+      <div class="welcome-actions">
+        <button id="btn-play-normal" class="btn-primary-neon">
+          <span>⚡</span>
+          <span>START SURVIVAL</span>
+        </button>
+
+        <button id="btn-play-daily" class="btn-secondary-neon">
+          <span>📅</span>
+          <span>DAILY CHALLENGE</span>
+        </button>
+      </div>
+
+      <!-- Quick Menu Grid: Leaderboard, Daily, Skins, Achievements -->
+      <div>
+        <div class="welcome-grid-menu">
+          <button id="btn-open-leaderboard" class="btn-menu-icon" title="Leaderboard">
+            <span class="menu-emoji">🏆</span>
+            <span>RANKS</span>
+          </button>
+          <button id="btn-open-daily" class="btn-menu-icon" title="Daily Modifiers">
+            <span class="menu-emoji">🎯</span>
+            <span>DAILY</span>
+          </button>
+          <button id="btn-open-skins" class="btn-menu-icon" title="Skins & Customization">
+            <span class="menu-emoji">🎨</span>
+            <span>SKINS</span>
+          </button>
+          <button id="btn-open-achievements" class="btn-menu-icon" title="Achievements">
+            <span class="menu-emoji">🎖️</span>
+            <span>BADGES</span>
+          </button>
+        </div>
+
+        <!-- Audio Toggles & How to Play -->
+        <div class="welcome-audio-bar">
+          <button class="btn-audio-toggle btn-toggle-sfx">🔊 SFX ON</button>
+          <button class="btn-audio-toggle btn-toggle-bgm">🎶 BGM ON</button>
+          <button id="btn-open-instructions" class="btn-audio-toggle">❓ HOW TO PLAY</button>
+        </div>
+
+        <div class="welcome-footer-stat">
+          PERSONAL BEST: <strong id="welcome-high-score">0</strong> PTS
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 2. GAME HUD SCREEN ================= -->
+    <div id="game-screen" class="game-screen hidden">
+      <div class="hud-top-bar">
+        <!-- Score -->
+        <div class="hud-score-wrap">
+          <span class="hud-score-label">SCORE</span>
+          <span id="hud-score" class="hud-score-digits">0</span>
+        </div>
+
+        <!-- Combo Multiplier & Decay Bar -->
+        <div class="hud-center-wrap">
+          <div id="hud-combo" class="hud-combo-badge hidden">x2 COMBO</div>
+          <div class="hud-combo-meter">
+            <div id="hud-combo-bar"></div>
+          </div>
+        </div>
+
+        <!-- Right Controls: Shield status, Mute, Pause -->
+        <div class="hud-right-wrap">
+          <span id="hud-shield-indicator" class="hud-shield-badge hidden">🛡️ SHIELD</span>
+          <button id="btn-hud-pause" class="btn-hud-icon" title="Pause Game">⏸</button>
+        </div>
+      </div>
+
+      <!-- Secondary HUD Bar: Speed Stage & Survived Time -->
+      <div class="hud-secondary-bar">
+        <span id="hud-stage">SPEED LVL 1 (1.0x)</span>
+        <span id="hud-time">00:00.0</span>
+      </div>
+
+      <!-- Friend Challenge Target Widget (if active) -->
+      <div id="hud-friend-challenge" class="hud-friend-banner hidden">
+        🎯 TARGET: 15,000 (Alex)
+      </div>
+    </div>
+
+    <!-- ================= 3. GAME OVER SCREEN ================= -->
+    <div id="gameover-screen" class="game-screen hidden">
+      <div class="gameover-header">
+        <h2 class="gameover-title">CRASHED!</h2>
+        <div id="go-new-best-badge" class="gameover-badge-newbest hidden">👑 NEW PERSONAL BEST!</div>
+        <div id="go-friend-result" class="go-banner hidden"></div>
+      </div>
+
+      <!-- Giant Final Score Card -->
+      <div class="gameover-score-card">
+        <div class="go-score-label">FINAL SCORE</div>
+        <div id="go-final-score" class="go-score-val">0</div>
+        <div id="go-rank-percentile" class="go-rank-pill">TOP 1.2% GLOBAL</div>
+      </div>
+
+      <!-- Performance Stats 4-Grid -->
+      <div class="gameover-stats-grid">
+        <div class="go-stat-box">
+          <span class="go-stat-label">TIME SURVIVED</span>
+          <span id="go-stat-time" class="go-stat-val">0.0s</span>
+        </div>
+        <div class="go-stat-box">
+          <span class="go-stat-label">MAX COMBO</span>
+          <span id="go-stat-combo" class="go-stat-val">1x</span>
+        </div>
+        <div class="go-stat-box">
+          <span class="go-stat-label">NEAR MISSES</span>
+          <span id="go-stat-nearmisses" class="go-stat-val">0</span>
+        </div>
+        <div class="go-stat-box">
+          <span class="go-stat-label">BLUE ORBS</span>
+          <span id="go-stat-orbs" class="go-stat-val">0</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="gameover-actions">
+        <!-- Main Quick Restart Button -->
+        <button id="btn-gameover-restart" class="btn-primary-neon">
+          <span>🔄</span>
+          <span>RETRY (SPACE / TAP)</span>
+        </button>
+
+        <!-- Viral Action Row -->
+        <div class="gameover-viral-row">
+          <button id="btn-gameover-share" class="btn-viral" title="Share your score">
+            <span>📢</span>
+            <span>SHARE</span>
+          </button>
+          <button id="btn-gameover-challenge" class="btn-viral" title="Challenge a friend">
+            <span>⚔️</span>
+            <span>CHALLENGE</span>
+          </button>
+          <button id="btn-gameover-card" class="btn-viral" title="Save scorecard image">
+            <span>📸</span>
+            <span>CARD</span>
+          </button>
+        </div>
+
+        <button id="btn-gameover-menu" class="btn-sub-action">
+          🏠 Main Menu
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= MODALS & OVERLAYS ================= -->
+
+    <!-- Modal: Pause -->
+    <div id="modal-pause" class="modal-overlay hidden">
+      <div class="modal-content text-center">
+        <div class="modal-header">
+          <h3>SYSTEM PAUSED</h3>
+          <button class="btn-close-modal" id="btn-pause-close">✕</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px; margin: 15px 0;">
+          <button id="btn-pause-resume" class="btn-primary-neon">▶ RESUME</button>
+          <button id="btn-pause-restart" class="btn-secondary-neon">🔄 RESTART RUN</button>
+          <button id="btn-pause-quit" class="btn-secondary-neon">🏠 QUIT TO MENU</button>
+        </div>
+
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:10px;">
+          <button class="btn-audio-toggle btn-toggle-sfx">🔊 SFX ON</button>
+          <button class="btn-audio-toggle btn-toggle-bgm">🎶 BGM ON</button>
+        </div>
+
+        <div style="margin-top: 15px; font-size: 0.8rem; color: var(--text-muted); text-align: left;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="setting-touch-offset" checked>
+            <span>Touch Offset (Lifts ball above finger for visibility)</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Leaderboard -->
+    <div id="modal-leaderboard" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>GLOBAL LEADERBOARD</h3>
+          <button class="btn-close-modal">✕</button>
+        </div>
+
+        <div class="lb-tabs">
+          <button class="lb-tab active" data-tab="global">TOP PLAYERS</button>
+          <button class="lb-tab" data-tab="daily">DAILY RUN</button>
+        </div>
+
+        <div style="max-height: 380px; overflow-y: auto;">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th style="width: 15%;">RANK</th>
+                <th style="width: 55%;">PILOT</th>
+                <th style="width: 30%; text-align: right;">SCORE</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <!-- Dynamically generated rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Daily Challenge -->
+    <div id="modal-daily" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>DAILY CHALLENGE</h3>
+          <button class="btn-close-modal">✕</button>
+        </div>
+
+        <div class="daily-banner-box">
+          <div id="daily-modifier-title" class="daily-modifier-tag">HYPER ACCELERATION</div>
+          <p id="daily-modifier-desc" class="daily-modifier-text">Speed scales 50% faster. Identical seed worldwide today!</p>
+        </div>
+
+        <div class="daily-countdown-wrap">
+          <span>Challenge Date: <strong id="daily-date-display" style="color:var(--neon-cyan)">2026-10-30</strong></span>
+          <span>Resets in: <span id="daily-countdown" class="countdown-timer">00:00:00</span></span>
+        </div>
+
+        <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-muted);">
+          Your Best Today: <strong id="daily-best-today" style="color:#ffffff;">Not played yet</strong>
+        </div>
+
+        <!-- 7-Day Flame Calendar -->
+        <div style="margin-top: 15px;">
+          <div style="font-size: 0.8rem; font-weight:700; margin-bottom: 6px;">7-DAY STREAK PROGRESS</div>
+          <div id="daily-streak-calendar" class="daily-streak-calendar">
+            <!-- 7-day flame cards -->
+          </div>
+        </div>
+
+        <button id="btn-modal-start-daily" class="btn-primary-neon" style="margin-top: 15px;">
+          <span>🚀</span>
+          <span>LAUNCH DAILY RUN</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal: Achievements -->
+    <div id="modal-achievements" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>ACHIEVEMENTS</h3>
+          <button class="btn-close-modal">✕</button>
+        </div>
+        <div id="achievements-container" class="achievements-grid">
+          <!-- Dynamically injected badges -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Skins -->
+    <div id="modal-skins" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>BALL SKINS</h3>
+          <button class="btn-close-modal">✕</button>
+        </div>
+        <div id="skins-container" class="skins-grid">
+          <!-- Dynamically injected skins -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Instructions / How to Play -->
+    <div id="modal-instructions" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>HOW TO PLAY</h3>
+          <button class="btn-close-modal">✕</button>
+        </div>
+
+        <div class="instruction-step">
+          <div class="step-icon">🔴</div>
+          <div class="step-content">
+            <h4 style="color: var(--neon-red)">NEVER TOUCH THE RED</h4>
+            <p>Any collision with red orbs, sweeping laser bars, spinners, or gates results in instant destruction!</p>
+          </div>
+        </div>
+
+        <div class="instruction-step">
+          <div class="step-icon">🔵</div>
+          <div class="step-content">
+            <h4 style="color: var(--neon-cyan)">BLUE IS SAFE & POWERFUL</h4>
+            <p>Collect Blue Energy Orbs for bonus points. Grab Blue Shields 🛡️ to survive a lethal hit, or Chrono Gems ⏳ to slow time.</p>
+          </div>
+        </div>
+
+        <div class="instruction-step">
+          <div class="step-icon">⚡</div>
+          <div class="step-content">
+            <h4 style="color: var(--neon-gold)">NEAR-MISS GRAZE COMBO</h4>
+            <p>Graze within inches of red obstacles without touching to trigger Near-Misses! Ramps your combo multiplier up to 10x!</p>
+          </div>
+        </div>
+
+        <div class="instruction-step">
+          <div class="step-icon">⏱️</div>
+          <div class="step-content">
+            <h4 style="color: #ffffff">SPEED UP EVERY 10 SECONDS</h4>
+            <p>Every 10 seconds of survival, the simulation accelerates into higher adrenaline speed tiers.</p>
+          </div>
+        </div>
+
+        <div class="instruction-step">
+          <div class="step-icon">🎮</div>
+          <div class="step-content">
+            <h4 style="color: #ffffff">CONTROLS</h4>
+            <p><strong>Mobile:</strong> Touch & drag anywhere. Ball is elevated slightly above your finger for maximum visibility.<br>
+            <strong>Desktop:</strong> Use Arrow Keys, WASD, or Mouse Drag.</p>
+          </div>
+        </div>
+
+        <button class="btn-primary-neon btn-close-modal" style="margin-top: 10px;">
+          GOT IT, LET'S PLAY!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/obstacles.js"></script>
+  <script src="js/viral.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ui.js"></script>
+
+  <script>
+    // Initialize Game & UI on DOM ready
+    window.addEventListener('DOMContentLoaded', () => {
+      // Register Service Worker for offline PWA install
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed', err));
+      }
+
+      const canvas = document.getElementById('game-canvas');
+      window.gameEngine.init(canvas);
+      window.uiManager.init();
+
+      // Launch Daily button inside modal
+      document.getElementById('btn-modal-start-daily').addEventListener('click', () => {
+        document.getElementById('modal-daily').classList.add('hidden');
+        window.soundEngine.playClick();
+        window.gameEngine.startGame(true);
+      });
+
+      // Audio Unlock on first touch/interaction
+      const unlockAudio = () => {
+        window.soundEngine.init();
+        window.soundEngine.ensureContext();
+        window.removeEventListener('pointerdown', unlockAudio);
+        window.removeEventListener('keydown', unlockAudio);
+      };
+      window.addEventListener('pointerdown', unlockAudio);
+      window.addEventListener('keydown', unlockAudio);
+    });
+  </script>
+</body>
+</html>
